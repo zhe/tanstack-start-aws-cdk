@@ -1,0 +1,28 @@
+# Node dependencies
+node_modules
+
+# Build outputs
+/build/
+/api/
+/server/build
+/public/build
+*.js
+!jest.config.js
+*.d.ts
+
+# CDK specific
+.cdk.staging
+cdk.out
+
+# Environment and cache
+.DS_Store
+.cache
+.env
+.output
+.vinxi
+
+# Test results
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

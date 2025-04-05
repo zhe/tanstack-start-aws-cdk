@@ -1,0 +1,23 @@
+{
+  "name": "tanstack-start-aws-cdk",
+  "version": "0.1.0",
+  "description": "Monorepo for TanStack Start and AWS CDK in TypeScript",
+  "private": true,
+  "workspaces": [
+    "app",
+    "cdk"
+  ],
+  "scripts": {
+    "app": "npm -w app",
+    "cdk": "npm -w cdk",
+    "dev": "npm -w app run dev",
+    "build": "npm run -w app build",
+    "deploy": "npm run build && npm -w cdk run cdk deploy",
+    "deploy:dev": "npm run build && npm -w cdk run cdk deploy -- --context stage=dev",
+    "deploy:staging": "npm run build && npm -w cdk run cdk deploy -- --context stage=staging",
+    "deploy:prod": "npm run build && npm -w cdk run cdk deploy -- --context stage=prod"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
