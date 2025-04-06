@@ -94,8 +94,11 @@ jobs:
 
       - name: Commit changes and update tag
         run: |
-          # Add and commit changes
-          git add .
+          # Add and commit only specific files
+          git add package.json package-lock.json
+          git add app/package.json app/package-lock.json
+          git add cdk/package.json cdk/package-lock.json
+          git add CHANGELOG.md
           git commit -m "chore(release): update changelog and bump version for release ${{ steps.vars.outputs.VERSION }}"
 
           # Push the commit
