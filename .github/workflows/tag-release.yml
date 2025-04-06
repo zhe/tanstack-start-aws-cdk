@@ -1,0 +1,127 @@
+name: "Automated Release Process"
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: "Create and Publish Release"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Extract version from tag
+        id: vars
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          VERSION="$TAG_NAME"
+          VERSION_NO_V=${VERSION#v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION_NO_V=$VERSION_NO_V" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION from tag"
+
+      - name: Configure Git and checkout main branch
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          # Checkout the main branch
+          git checkout main
+          git pull origin main
+
+      - name: Verify tag and check if it points to latest commit
+        id: tag_check
+        run: |
+          echo "🔄 Step 1: Verifying tag ${{ steps.vars.outputs.VERSION }}..."
+
+          # Get the commit hash that the tag points to
+          TAG_COMMIT=$(git rev-parse ${{ steps.vars.outputs.VERSION }})
+
+          # Get the latest commit hash on main branch
+          LATEST_COMMIT=$(git rev-parse main)
+
+          echo "Tag ${{ steps.vars.outputs.VERSION }} points to commit: $TAG_COMMIT"
+          echo "Latest commit on main is: $LATEST_COMMIT"
+
+          # Check if the tag points to the latest commit
+          if [ "$TAG_COMMIT" = "$LATEST_COMMIT" ]; then
+            echo "TAG_IS_LATEST=true" >> $GITHUB_OUTPUT
+            echo "✅ Tag points to the latest commit. Will proceed with updates and move tag."
+          else
+            echo "TAG_IS_LATEST=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Tag does not point to the latest commit. Aborting workflow."
+            exit 1
+          fi
+
+      - name: Bump version in package.json files
+        run: |
+          echo "🔄 Step 2: Bumping version in package.json files..."
+          # Update root package.json
+          npm version ${{ steps.vars.outputs.VERSION_NO_V }} --no-git-tag-version
+
+          # Update app package.json if it has a version field
+          if grep -q '"version"' app/package.json; then
+            (cd app && npm version ${{ steps.vars.outputs.VERSION_NO_V }} --no-git-tag-version)
+          fi
+
+          # Update cdk package.json if it has a version field
+          if grep -q '"version"' cdk/package.json; then
+            (cd cdk && npm version ${{ steps.vars.outputs.VERSION_NO_V }} --no-git-tag-version)
+          fi
+          echo "✅ Version bumped in package.json files"
+
+      - name: Update CHANGELOG.md
+        id: changelog
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --unreleased --tag ${{ steps.vars.outputs.VERSION }} --prepend CHANGELOG.md
+
+      - name: Commit changes and update tag
+        run: |
+          # Add and commit changes
+          git add .
+          git commit -m "chore(release): update changelog and bump version for release ${{ steps.vars.outputs.VERSION }}"
+
+          # Push the commit
+          git push origin main
+
+          # Move the tag to the current commit and force push it
+          git tag -f ${{ steps.vars.outputs.VERSION }} HEAD
+          git push --force origin ${{ steps.vars.outputs.VERSION }}
+
+          echo "✅ Changes committed to main branch and tag updated to point to new commit"
+
+      - name: Extract release notes
+        id: release_notes
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: release_notes.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Release ${{ steps.vars.outputs.VERSION }}"
+          tag_name: ${{ steps.vars.outputs.VERSION }}
+          body_path: release_notes.txt
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
