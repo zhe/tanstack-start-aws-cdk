@@ -90,14 +90,14 @@ jobs:
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
-          args: --unreleased --tag ${{ steps.vars.outputs.VERSION }} --prepend CHANGELOG.md
+          args: --tag ${{ steps.vars.outputs.VERSION }}
+        env:
+          OUTPUT: CHANGELOG.md
 
       - name: Commit changes and update tag
         run: |
           # Add and commit only specific files
-          git add package.json package-lock.json
-          git add app/package.json cdk/package.json
-          git add CHANGELOG.md
+          git add CHANGELOG.md package.json package-lock.json app/package.json cdk/package.json
           git commit -m "chore(release): update changelog and bump version for release ${{ steps.vars.outputs.VERSION }}"
 
           # Push the commit
