@@ -1,6 +1,6 @@
 {
   "name": "tanstack-start-aws-cdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Monorepo for TanStack Start and AWS CDK in TypeScript",
   "private": true,
   "workspaces": [
