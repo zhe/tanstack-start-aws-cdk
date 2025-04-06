@@ -22,6 +22,7 @@ The architecture follows a simple serverless pattern:
 - **S3 Bucket**: Stores static assets (CSS, JavaScript, images)
 
 This setup provides several benefits:
+
 - Serverless architecture with pay-per-use pricing
 - Global content delivery via CloudFront
 - Automatic scaling based on traffic
@@ -49,7 +50,7 @@ This setup provides several benefits:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/tanstack-start-aws-cdk.git
+git clone https://github.com/zhe/tanstack-start-aws-cdk.git
 cd tanstack-start-aws-cdk
 
 # Install dependencies
@@ -95,6 +96,12 @@ This is a basic starter template and has some limitations:
 ## Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
+
+## References
+
+- [TanStack Start](https://tanstack.com/start/latest)
+- [AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/home.html)
+- [git-cliff](https://github.com/orhun/git-cliff)
 
 ## License
 
