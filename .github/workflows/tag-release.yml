@@ -68,22 +68,12 @@ jobs:
             exit 1
           fi
 
-      - name: Bump version in package.json files
+      - name: Bump version in root package.json
         run: |
-          echo "🔄 Step 2: Bumping version in package.json files..."
-          # Update root package.json
+          echo "🔄 Step 2: Bumping version in root package.json..."
+          # Update only root package.json
           npm version ${{ steps.vars.outputs.VERSION_NO_V }} --no-git-tag-version
-
-          # Update app package.json if it has a version field
-          if grep -q '"version"' app/package.json; then
-            (cd app && npm version ${{ steps.vars.outputs.VERSION_NO_V }} --no-git-tag-version)
-          fi
-
-          # Update cdk package.json if it has a version field
-          if grep -q '"version"' cdk/package.json; then
-            (cd cdk && npm version ${{ steps.vars.outputs.VERSION_NO_V }} --no-git-tag-version)
-          fi
-          echo "✅ Version bumped in package.json files"
+          echo "✅ Version bumped in root package.json"
 
       - name: Update CHANGELOG.md
         id: changelog
@@ -97,7 +87,7 @@ jobs:
       - name: Commit changes and update tag
         run: |
           # Add and commit only specific files
-          git add CHANGELOG.md package.json package-lock.json app/package.json cdk/package.json
+          git add CHANGELOG.md package.json package-lock.json
           git commit -m "chore(release): update changelog and bump version for release ${{ steps.vars.outputs.VERSION }}"
 
           # Push the commit
